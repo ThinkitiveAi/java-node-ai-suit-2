@@ -1,6 +1,7 @@
 package com.thinkitive.thinkemr.service;
 
 import com.thinkitive.thinkemr.config.JwtConfig;
+import com.thinkitive.thinkemr.entity.Patient;
 import com.thinkitive.thinkemr.entity.Provider;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
@@ -30,6 +31,16 @@ public class JwtService {
         claims.put("verification_status", provider.getVerificationStatus().toString());
 
         return createToken(claims, provider.getEmail());
+    }
+
+    public String generateToken(Patient patient) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("patient_id", patient.getId().toString());
+        claims.put("email", patient.getEmail());
+        claims.put("role", "PATIENT");
+        claims.put("verification_status", patient.getVerificationStatus().toString());
+
+        return createToken(claims, patient.getEmail());
     }
 
     private String createToken(Map<String, Object> claims, String subject) {
@@ -82,6 +93,10 @@ public class JwtService {
 
     public String extractProviderId(String token) {
         return extractAllClaims(token).get("provider_id", String.class);
+    }
+
+    public String extractPatientId(String token) {
+        return extractAllClaims(token).get("patient_id", String.class);
     }
 
     public String extractRole(String token) {

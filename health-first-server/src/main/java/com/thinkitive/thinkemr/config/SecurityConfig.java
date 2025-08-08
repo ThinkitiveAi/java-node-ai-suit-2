@@ -32,9 +32,12 @@ public class SecurityConfig {
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS) // JWT is stateless
             )
             .authorizeHttpRequests(authz -> authz
-                .requestMatchers("/api/v1/provider/register", "/api/v1/provider/login").permitAll() // Public endpoints
+                .requestMatchers("/api/v1/provider/register", "/api/v1/provider/login").permitAll() // Public provider endpoints
                 .requestMatchers("/api/v1/provider/specializations").permitAll() // Public endpoint
                 .requestMatchers("/api/v1/provider/verify/**").permitAll() // Public verification endpoint for testing
+                .requestMatchers("/api/v1/patient/register", "/api/v1/patient/login").permitAll() // Public patient endpoints
+                .requestMatchers("/api/v1/patient/verify/**").permitAll() // Public patient verification endpoint for testing
+                .requestMatchers("/api/v1/availability/search").permitAll() // Public availability search endpoint
                 .requestMatchers("/h2-console/**").permitAll() // Allow H2 console
                 .anyRequest().authenticated() // All other endpoints require authentication
             )

@@ -20,6 +20,14 @@ public class SecurityUtil {
         return null;
     }
 
+    public String getCurrentPatientEmail() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated()) {
+            return authentication.getName();
+        }
+        return null;
+    }
+
     public UUID getCurrentProviderId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.isAuthenticated() && authentication.getDetails() instanceof Map) {
@@ -37,7 +45,34 @@ public class SecurityUtil {
         return null;
     }
 
+    public UUID getCurrentPatientId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated() && authentication.getDetails() instanceof Map) {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> details = (Map<String, Object>) authentication.getDetails();
+            String patientId = (String) details.get("patientId");
+            if (patientId != null) {
+                try {
+                    return UUID.fromString(patientId);
+                } catch (IllegalArgumentException e) {
+                    log.warn("Invalid patient ID in authentication details: {}", patientId);
+                }
+            }
+        }
+        return null;
+    }
+
     public boolean isProviderAuthenticated() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return authentication != null && authentication.isAuthenticated() && hasRole("PROVIDER");
+    }
+
+    public boolean isPatientAuthenticated() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return authentication != null && authentication.isAuthenticated() && hasRole("PATIENT");
+    }
+
+    public boolean isAuthenticated() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         return authentication != null && authentication.isAuthenticated();
     }
