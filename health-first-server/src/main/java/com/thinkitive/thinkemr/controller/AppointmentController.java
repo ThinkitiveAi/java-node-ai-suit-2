@@ -3,7 +3,10 @@ package com.thinkitive.thinkemr.controller;
 import com.thinkitive.thinkemr.dto.ApiResponse;
 import com.thinkitive.thinkemr.dto.AppointmentBookingRequest;
 import com.thinkitive.thinkemr.dto.AppointmentBookingResponse;
+import com.thinkitive.thinkemr.dto.AppointmentListRequest;
+import com.thinkitive.thinkemr.dto.AppointmentListResponse;
 import com.thinkitive.thinkemr.dto.AvailableSlotsResponse;
+import com.thinkitive.thinkemr.entity.Appointment;
 import com.thinkitive.thinkemr.service.AppointmentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -188,6 +191,149 @@ public class AppointmentController {
             
         } catch (Exception e) {
             log.error("Error during appointment confirmation: {}", appointmentId, e);
+            throw e;
+        }
+    }
+
+    // New comprehensive appointment listing endpoints
+
+    @GetMapping("/list")
+    public ResponseEntity<ApiResponse<AppointmentListResponse>> getAppointmentList(
+            @RequestParam(defaultValue = "0") Integer page,
+            @RequestParam(defaultValue = "10") Integer size,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(required = false) String appointmentType,
+            @RequestParam(required = false) String patientName,
+            @RequestParam(required = false) String providerName,
+            @RequestParam(required = false) Appointment.AppointmentStatus status,
+            @RequestParam(required = false) String searchTerm,
+            @RequestParam(defaultValue = "dateTime") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDirection) {
+        
+        log.info("Getting appointment list with filters - page: {}, size: {}, startDate: {}, endDate: {}", 
+                page, size, startDate, endDate);
+        
+        try {
+            AppointmentListRequest request = new AppointmentListRequest();
+            request.setPage(page);
+            request.setSize(size);
+            request.setStartDate(startDate);
+            request.setEndDate(endDate);
+            request.setAppointmentType(appointmentType);
+            request.setPatientName(patientName);
+            request.setProviderName(providerName);
+            request.setStatus(status);
+            request.setSearchTerm(searchTerm);
+            request.setSortBy(sortBy);
+            request.setSortDirection(sortDirection);
+
+            AppointmentListResponse response = appointmentService.getAppointmentList(request);
+            
+            ApiResponse<AppointmentListResponse> apiResponse = ApiResponse.success(
+                "Appointment list retrieved successfully",
+                response
+            );
+            
+            log.info("Appointment list retrieval successful with {} appointments", response.getAppointments().size());
+            return ResponseEntity.ok(apiResponse);
+            
+        } catch (Exception e) {
+            log.error("Error during appointment list retrieval", e);
+            throw e;
+        }
+    }
+
+    @GetMapping("/providers/{providerId}/list")
+    public ResponseEntity<ApiResponse<AppointmentListResponse>> getProviderAppointmentList(
+            @PathVariable UUID providerId,
+            @RequestParam(defaultValue = "0") Integer page,
+            @RequestParam(defaultValue = "10") Integer size,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(required = false) String appointmentType,
+            @RequestParam(required = false) String patientName,
+            @RequestParam(required = false) String providerName,
+            @RequestParam(required = false) Appointment.AppointmentStatus status,
+            @RequestParam(required = false) String searchTerm,
+            @RequestParam(defaultValue = "dateTime") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDirection) {
+        
+        log.info("Getting appointment list for provider: {} with filters", providerId);
+        
+        try {
+            AppointmentListRequest request = new AppointmentListRequest();
+            request.setPage(page);
+            request.setSize(size);
+            request.setStartDate(startDate);
+            request.setEndDate(endDate);
+            request.setAppointmentType(appointmentType);
+            request.setPatientName(patientName);
+            request.setProviderName(providerName);
+            request.setStatus(status);
+            request.setSearchTerm(searchTerm);
+            request.setSortBy(sortBy);
+            request.setSortDirection(sortDirection);
+
+            AppointmentListResponse response = appointmentService.getProviderAppointmentList(providerId, request);
+            
+            ApiResponse<AppointmentListResponse> apiResponse = ApiResponse.success(
+                "Provider appointment list retrieved successfully",
+                response
+            );
+            
+            log.info("Provider appointment list retrieval successful for provider: {}", providerId);
+            return ResponseEntity.ok(apiResponse);
+            
+        } catch (Exception e) {
+            log.error("Error during provider appointment list retrieval", e);
+            throw e;
+        }
+    }
+
+    @GetMapping("/patients/{patientId}/list")
+    public ResponseEntity<ApiResponse<AppointmentListResponse>> getPatientAppointmentList(
+            @PathVariable UUID patientId,
+            @RequestParam(defaultValue = "0") Integer page,
+            @RequestParam(defaultValue = "10") Integer size,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(required = false) String appointmentType,
+            @RequestParam(required = false) String patientName,
+            @RequestParam(required = false) String providerName,
+            @RequestParam(required = false) Appointment.AppointmentStatus status,
+            @RequestParam(required = false) String searchTerm,
+            @RequestParam(defaultValue = "dateTime") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDirection) {
+        
+        log.info("Getting appointment list for patient: {} with filters", patientId);
+        
+        try {
+            AppointmentListRequest request = new AppointmentListRequest();
+            request.setPage(page);
+            request.setSize(size);
+            request.setStartDate(startDate);
+            request.setEndDate(endDate);
+            request.setAppointmentType(appointmentType);
+            request.setPatientName(patientName);
+            request.setProviderName(providerName);
+            request.setStatus(status);
+            request.setSearchTerm(searchTerm);
+            request.setSortBy(sortBy);
+            request.setSortDirection(sortDirection);
+
+            AppointmentListResponse response = appointmentService.getPatientAppointmentList(patientId, request);
+            
+            ApiResponse<AppointmentListResponse> apiResponse = ApiResponse.success(
+                "Patient appointment list retrieved successfully",
+                response
+            );
+            
+            log.info("Patient appointment list retrieval successful for patient: {}", patientId);
+            return ResponseEntity.ok(apiResponse);
+            
+        } catch (Exception e) {
+            log.error("Error during patient appointment list retrieval", e);
             throw e;
         }
     }

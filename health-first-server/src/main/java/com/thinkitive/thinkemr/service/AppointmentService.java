@@ -2,6 +2,8 @@ package com.thinkitive.thinkemr.service;
 
 import com.thinkitive.thinkemr.dto.AppointmentBookingRequest;
 import com.thinkitive.thinkemr.dto.AppointmentBookingResponse;
+import com.thinkitive.thinkemr.dto.AppointmentListRequest;
+import com.thinkitive.thinkemr.dto.AppointmentListResponse;
 import com.thinkitive.thinkemr.dto.AvailableSlotsResponse;
 import com.thinkitive.thinkemr.entity.Appointment;
 import com.thinkitive.thinkemr.entity.AppointmentSlot;
@@ -15,6 +17,10 @@ import com.thinkitive.thinkemr.repository.ProviderRepository;
 import com.thinkitive.thinkemr.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -213,6 +219,224 @@ public class AppointmentService {
         appointmentRepository.save(appointment);
 
         log.info("Appointment confirmed successfully: {}", appointmentId);
+    }
+
+    // New comprehensive appointment listing method
+    @Transactional(readOnly = true)
+    public AppointmentListResponse getAppointmentList(AppointmentListRequest request) {
+        log.info("Getting appointment list with filters: {}", request);
+
+        // Create pageable with sorting
+        Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
+        Pageable pageable = PageRequest.of(request.getPage(), request.getSize(), sort);
+
+        // Get appointments with filters
+        Page<Appointment> appointmentPage = appointmentRepository.findAppointmentsWithFilters(
+            request.getStartDate(),
+            request.getEndDate(),
+            request.getAppointmentType(),
+            request.getStatus(),
+            request.getPatientName(),
+            request.getProviderName(),
+            request.getSearchTerm(),
+            pageable
+        );
+
+        // Convert to DTOs
+        List<AppointmentListResponse.AppointmentDto> appointmentDtos = appointmentPage.getContent().stream()
+            .map(AppointmentListResponse::fromAppointment)
+            .toList();
+
+        // Build pagination info
+        AppointmentListResponse.PaginationInfo paginationInfo = new AppointmentListResponse.PaginationInfo(
+            request.getPage(),
+            appointmentPage.getTotalPages(),
+            request.getSize(),
+            appointmentPage.getTotalElements(),
+            appointmentPage.hasNext(),
+            appointmentPage.hasPrevious(),
+            String.format("Showing %d to %d of %d entries", 
+                (request.getPage() * request.getSize()) + 1,
+                Math.min((request.getPage() + 1) * request.getSize(), appointmentPage.getTotalElements()),
+                appointmentPage.getTotalElements())
+        );
+
+        // Build filter criteria
+        AppointmentListResponse.FilterCriteria filterCriteria = new AppointmentListResponse.FilterCriteria(
+            request.getStartDate(),
+            request.getEndDate(),
+            request.getAppointmentType(),
+            request.getPatientName(),
+            request.getProviderName(),
+            request.getStatus(),
+            request.getSearchTerm()
+        );
+
+        // Build summary info
+        AppointmentListResponse.SummaryInfo summaryInfo = new AppointmentListResponse.SummaryInfo(
+            appointmentRepository.countTotalAppointments(),
+            appointmentRepository.countByStatus(Appointment.AppointmentStatus.CONFIRMED),
+            appointmentRepository.countByStatus(Appointment.AppointmentStatus.CONFIRMED),
+            appointmentRepository.countByStatus(Appointment.AppointmentStatus.CANCELLED),
+            appointmentRepository.countByStatus(Appointment.AppointmentStatus.PENDING)
+        );
+
+        return new AppointmentListResponse(
+            appointmentDtos,
+            paginationInfo,
+            filterCriteria,
+            summaryInfo
+        );
+    }
+
+    // Get appointments for a specific provider with filters
+    @Transactional(readOnly = true)
+    public AppointmentListResponse getProviderAppointmentList(UUID providerId, AppointmentListRequest request) {
+        log.info("Getting appointment list for provider: {} with filters: {}", providerId, request);
+
+        // Validate provider exists
+        providerRepository.findById(providerId)
+            .orElseThrow(() -> new ValidationException("Provider not found"));
+
+        // Create pageable with sorting
+        Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
+        Pageable pageable = PageRequest.of(request.getPage(), request.getSize(), sort);
+
+        // Get appointments with filters
+        Page<Appointment> appointmentPage = appointmentRepository.findProviderAppointmentsWithFilters(
+            providerId,
+            request.getStartDate(),
+            request.getEndDate(),
+            request.getAppointmentType(),
+            request.getStatus(),
+            pageable
+        );
+
+        // Convert to DTOs
+        List<AppointmentListResponse.AppointmentDto> appointmentDtos = appointmentPage.getContent().stream()
+            .map(AppointmentListResponse::fromAppointment)
+            .toList();
+
+        // Build pagination info
+        AppointmentListResponse.PaginationInfo paginationInfo = new AppointmentListResponse.PaginationInfo(
+            request.getPage(),
+            appointmentPage.getTotalPages(),
+            request.getSize(),
+            appointmentPage.getTotalElements(),
+            appointmentPage.hasNext(),
+            appointmentPage.hasPrevious(),
+            String.format("Showing %d to %d of %d entries", 
+                (request.getPage() * request.getSize()) + 1,
+                Math.min((request.getPage() + 1) * request.getSize(), appointmentPage.getTotalElements()),
+                appointmentPage.getTotalElements())
+        );
+
+        // Build filter criteria
+        AppointmentListResponse.FilterCriteria filterCriteria = new AppointmentListResponse.FilterCriteria(
+            request.getStartDate(),
+            request.getEndDate(),
+            request.getAppointmentType(),
+            request.getPatientName(),
+            request.getProviderName(),
+            request.getStatus(),
+            request.getSearchTerm()
+        );
+
+        // Build summary info for this provider
+        long totalAppointments = appointmentRepository.findByProviderId(providerId).size();
+        long confirmedAppointments = appointmentRepository.findByProviderIdAndStatus(providerId, Appointment.AppointmentStatus.CONFIRMED).size();
+        long cancelledAppointments = appointmentRepository.findByProviderIdAndStatus(providerId, Appointment.AppointmentStatus.CANCELLED).size();
+        long pendingAppointments = appointmentRepository.findByProviderIdAndStatus(providerId, Appointment.AppointmentStatus.PENDING).size();
+
+        AppointmentListResponse.SummaryInfo summaryInfo = new AppointmentListResponse.SummaryInfo(
+            totalAppointments,
+            confirmedAppointments,
+            confirmedAppointments,
+            cancelledAppointments,
+            pendingAppointments
+        );
+
+        return new AppointmentListResponse(
+            appointmentDtos,
+            paginationInfo,
+            filterCriteria,
+            summaryInfo
+        );
+    }
+
+    // Get appointments for a specific patient with filters
+    @Transactional(readOnly = true)
+    public AppointmentListResponse getPatientAppointmentList(UUID patientId, AppointmentListRequest request) {
+        log.info("Getting appointment list for patient: {} with filters: {}", patientId, request);
+
+        // Validate patient exists
+        patientRepository.findById(patientId)
+            .orElseThrow(() -> new ValidationException("Patient not found"));
+
+        // Create pageable with sorting
+        Sort sort = Sort.by(Sort.Direction.fromString(request.getSortDirection()), request.getSortBy());
+        Pageable pageable = PageRequest.of(request.getPage(), request.getSize(), sort);
+
+        // Get appointments with filters
+        Page<Appointment> appointmentPage = appointmentRepository.findPatientAppointmentsWithFilters(
+            patientId,
+            request.getStartDate(),
+            request.getEndDate(),
+            request.getAppointmentType(),
+            request.getStatus(),
+            pageable
+        );
+
+        // Convert to DTOs
+        List<AppointmentListResponse.AppointmentDto> appointmentDtos = appointmentPage.getContent().stream()
+            .map(AppointmentListResponse::fromAppointment)
+            .toList();
+
+        // Build pagination info
+        AppointmentListResponse.PaginationInfo paginationInfo = new AppointmentListResponse.PaginationInfo(
+            request.getPage(),
+            appointmentPage.getTotalPages(),
+            request.getSize(),
+            appointmentPage.getTotalElements(),
+            appointmentPage.hasNext(),
+            appointmentPage.hasPrevious(),
+            String.format("Showing %d to %d of %d entries", 
+                (request.getPage() * request.getSize()) + 1,
+                Math.min((request.getPage() + 1) * request.getSize(), appointmentPage.getTotalElements()),
+                appointmentPage.getTotalElements())
+        );
+
+        // Build filter criteria
+        AppointmentListResponse.FilterCriteria filterCriteria = new AppointmentListResponse.FilterCriteria(
+            request.getStartDate(),
+            request.getEndDate(),
+            request.getAppointmentType(),
+            request.getPatientName(),
+            request.getProviderName(),
+            request.getStatus(),
+            request.getSearchTerm()
+        );
+
+        // Build summary info for this patient
+        long totalAppointments = appointmentRepository.findByPatientId(patientId).size();
+        long confirmedAppointments = appointmentRepository.findByPatientIdAndStatus(patientId, Appointment.AppointmentStatus.CONFIRMED).size();
+        long cancelledAppointments = appointmentRepository.findByPatientIdAndStatus(patientId, Appointment.AppointmentStatus.CANCELLED).size();
+        long pendingAppointments = appointmentRepository.findByPatientIdAndStatus(patientId, Appointment.AppointmentStatus.PENDING).size();
+
+        AppointmentListResponse.SummaryInfo summaryInfo = new AppointmentListResponse.SummaryInfo(
+            totalAppointments,
+            confirmedAppointments,
+            confirmedAppointments,
+            cancelledAppointments,
+            pendingAppointments
+        );
+
+        return new AppointmentListResponse(
+            appointmentDtos,
+            paginationInfo,
+            filterCriteria,
+            summaryInfo
+        );
     }
 
     private void updateSlotStatus(AppointmentSlot slot) {

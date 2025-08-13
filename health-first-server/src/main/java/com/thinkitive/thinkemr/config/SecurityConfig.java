@@ -40,6 +40,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/availability/search").permitAll() // Public availability search endpoint
                 .requestMatchers("/api/v1/appointments/providers/*/slots").permitAll() // Public available slots endpoint
                 .requestMatchers("/api/v1/appointments/reference/*").permitAll() // Public appointment lookup by reference
+                .requestMatchers("/api/v1/appointments/list").permitAll() // Public appointment listing for admin view
                 .requestMatchers("/h2-console/**").permitAll() // Allow H2 console
                 .anyRequest().authenticated() // All other endpoints require authentication
             )
