@@ -21,6 +21,7 @@ import {
   People as PeopleIcon,
   Event as EventIcon,
   Schedule as ScheduleIcon,
+  AccessTime as AvailabilityIcon,
   Person as PersonIcon,
   Menu as MenuIcon,
   AccountCircle,
@@ -40,6 +41,7 @@ const Layout = () => {
     { text: 'Patients', icon: <PeopleIcon />, path: '/dashboard/patients' },
     { text: 'Appointments', icon: <EventIcon />, path: '/dashboard/appointments' },
     { text: 'Schedule', icon: <ScheduleIcon />, path: '/dashboard/schedule' },
+    { text: 'Availability', icon: <AvailabilityIcon />, path: '/dashboard/availability' },
     { text: 'Profile', icon: <PersonIcon />, path: '/dashboard/profile' },
   ]
 

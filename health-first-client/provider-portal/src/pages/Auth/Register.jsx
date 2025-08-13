@@ -94,7 +94,8 @@ const Register = () => {
       
       case 'phone':
         if (!value) return 'Phone number is required'
-        const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/
+        // Updated validation to be more flexible for international phone numbers
+        const phoneRegex = /^[\+]?[1-9][\d]{0,20}$/
         if (!phoneRegex.test(value.replace(/[\s\-\(\)]/g, ''))) return 'Please enter a valid phone number'
         return ''
       
@@ -132,8 +133,9 @@ const Register = () => {
       
       case 'zipCode':
         if (!value) return 'ZIP/Postal code is required'
-        const zipRegex = /^[A-Za-z0-9\s\-]{3,10}$/
-        if (!zipRegex.test(value)) return 'Please enter a valid ZIP/Postal code'
+        // Updated validation to be more flexible for different postal code formats
+        const zipRegex = /^[A-Za-z0-9\s\-]{3,20}$/
+        if (!zipRegex.test(value)) return 'Please enter a valid ZIP/Postal code (3-20 characters)'
         return ''
       
       case 'password':

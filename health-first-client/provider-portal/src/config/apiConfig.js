@@ -1,7 +1,7 @@
 // API Configuration
 export const API_CONFIG = {
   // Base URL for the API
-  BASE_URL: 'http://192.168.10.193:8765/api/v1',
+  BASE_URL: 'http://192.168.11.9:8087/api/v1',
   
   // Timeout settings
   TIMEOUT: 30000, // 30 seconds
@@ -19,6 +19,7 @@ export const API_CONFIG = {
       LOGIN: '/provider/login',
       PROFILE: '/provider/profile',
       LOGOUT: '/provider/logout',
+      AVAILABILITY: '/provider/availability',
     },
     
     // Patient endpoints (for future use)
@@ -53,6 +54,8 @@ export const API_CONFIG = {
     LOGIN: 'Login successful! Welcome back.',
     LOGOUT: 'Logged out successfully.',
     PROFILE_UPDATE: 'Profile updated successfully.',
+    AVAILABILITY_SAVED: 'Availability saved successfully!',
+    AVAILABILITY_DELETED: 'Availability deleted successfully!',
   },
 }
 

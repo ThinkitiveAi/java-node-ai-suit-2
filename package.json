@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "@hookform/resolvers": "^5.2.1",
+    "react-hook-form": "^7.62.0",
+    "react-hot-toast": "^2.5.2",
+    "yup": "^1.7.0"
+  }
+}

@@ -6,6 +6,7 @@ import Dashboard from './pages/Dashboard/Dashboard'
 import Patients from './pages/Patients/Patients'
 import Appointments from './pages/Appointments/Appointments'
 import Schedule from './pages/Schedule/Schedule'
+import Availability from './pages/Availability'
 import Profile from './pages/Profile/Profile'
 import Login from './pages/Auth/Login'
 import Register from './pages/Auth/Register'
@@ -19,6 +20,9 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         
+        {/* Direct Access to Availability (No Authentication Required) */}
+        <Route path="/availability" element={<Availability />} />
+        
         {/* Protected Routes - Dashboard and other pages */}
         <Route path="/dashboard" element={
           <ProtectedRoute>
@@ -29,10 +33,11 @@ function App() {
           <Route path="patients" element={<Patients />} />
           <Route path="appointments" element={<Appointments />} />
           <Route path="schedule" element={<Schedule />} />
+          <Route path="availability" element={<Availability />} />
           <Route path="profile" element={<Profile />} />
         </Route>
         
-        {/* Default redirect to login */}
+        {/* Default redirect to availability page for easy access */}
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>

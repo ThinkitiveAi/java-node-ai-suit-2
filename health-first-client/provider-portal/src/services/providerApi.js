@@ -25,9 +25,16 @@ export const providerApi = {
         }
       }
 
+      console.log('Provider Registration - Request Data:', requestData);
+      
       const response = await api.post(API_CONFIG.ENDPOINTS.PROVIDER.REGISTER, requestData)
+      
+      console.log('Provider Registration - Response:', response);
+      
       return response.data
     } catch (error) {
+      console.error('Provider Registration - Error:', error);
+      console.error('Error Response:', error.response);
       throw error
     }
   },
