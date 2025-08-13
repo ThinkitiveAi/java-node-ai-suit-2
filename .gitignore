@@ -1,0 +1,15 @@
+# General ignore for all subfolders
+**/target/
+**/.idea/
+**/*.iml
+**/.project
+**/.classpath
+**/.settings/
+**/.vscode/
+**/*.log
+**/*.tmp
+**/.env
+**/.DS_Store
+**/Thumbs.db
+**/*.swp
+**/*~
